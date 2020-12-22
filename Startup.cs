@@ -1,19 +1,18 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.IO;
+using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using OrchestrationWebApiExample.Models;
 
 namespace OrchestrationWebApiExample
 {
+    #pragma warning disable CS1591
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -29,8 +28,27 @@ namespace OrchestrationWebApiExample
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo {Title = "OrchestrationWebApiExample", Version = "v1"});
+                c.SwaggerDoc(
+                    "v1",
+                    new OpenApiInfo
+                    {
+                        Title = "OrchestrationWebApiExample",
+                        Version = "0.0.1",
+                        Description = "Test API",
+                        License = new OpenApiLicense
+                        {
+                            Name = "Use under LICX",
+                            Url = new Uri("https://example.com/license"),
+                        }
+                    });
+                // config use xml comments documents
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                c.IncludeXmlComments(xmlPath);
             });
+
+            services.AddDbContext<TodoContext>(opt =>
+                opt.UseInMemoryDatabase("TodoList"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -40,7 +58,11 @@ namespace OrchestrationWebApiExample
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "OrchestrationWebApiExample v1"));
+                app.UseSwaggerUI(
+                    c =>
+                        c.SwaggerEndpoint(
+                            "/swagger/v1/swagger.json",
+                            "OrchestrationWebApiExample v1"));
             }
 
             app.UseHttpsRedirection();
@@ -52,4 +74,5 @@ namespace OrchestrationWebApiExample
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
         }
     }
+    #pragma warning restore CS1591
 }
